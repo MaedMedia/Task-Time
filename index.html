@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Tracker Calendar - Week View</title>
+  <style>
+    /* CSS goes here */
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      grid-gap: 10px;
+      max-width: 600px;
+      margin: auto;
+      padding: 10px;
+    }
+    .calendar div {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+      position: relative;
+    }
+    .calendar input {
+      width: 100%;
+      margin-top: 5px;
+      padding: 5px;
+    }
+    .task-select {
+      width: 100%;
+      margin-top: 5px;
+      padding: 5px;
+    }
+    .total-time {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .week-nav {
+      text-align: center;
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2 style="text-align: center;">Task Tracker - Week View</h2>
+  
+  <div class="week-nav">
+    <button id="prevWeek">Previous Week</button>
+    <span id="weekTitle">Week of January 2025</span>
+    <button id="nextWeek">Next Week</button>
+  </div>
+  
+  <div class="calendar" id="calendar"></div>
+  
+  <div>
+    <h3>Select a Task</h3>
+    <select id="taskSelect" class="task-select">
+      <option value="Walkthrough">Walkthrough</option>
+      <option value="Training">Training</option>
+      <option value="Training Database">Training Database</option>
+      <option value="Time Studies">Time Studies</option>
+      <option value="Rework/Other">Rework/Other</option>
+    </select>
+    <h3>Total Time Spent on Selected Task</h3>
+    <div id="totalTime" class="total-time">0 hours</div>
+  </div>
+  
+  <script>
+    // JavaScript goes here
+    const tasks = ["Walkthrough", "Training", "Training Database", "Time Studies", "Rework/Other"];
+    let taskData = {};
+    let currentWeekStartDate = new Date();
+
+    function generateCalendar() {
+      const calendar = document.getElementById('calendar');
+      const weekStart = getStartOfWeek(currentWeekStartDate);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+
+      document.getElementById('weekTitle').textContent = `Week of ${weekStart.toDateString()} - ${weekEnd.toDateString()}`;
+      calendar.innerHTML = '';
+
+      for (let i = 0; i < 7; i++) {
+        const day = new Date(weekStart);
+        day.setDate(weekStart.getDate() + i);
+
+        const dayCell = document.createElement('div');
+        dayCell.textContent = day.getDate();
+
+        const taskSelect = document.createElement('select');
+        taskSelect.classList.add('task-select');
+        tasks.forEach(task => {
+          const option = document.createElement('option');
+          option.value = task;
+          option.textContent = task;
+          taskSelect.appendChild(option);
+        });
+
+        const timeInput = document.createElement('input');
+        timeInput.type = 'number';
+        timeInput.placeholder = 'Hours';
+
+        const dayKey = day.toDateString();
+        taskData[dayKey] = { tasks: Array(tasks.length).fill(0) };
+
+        timeInput.addEventListener('input', (e) => {
+          const taskIndex = taskSelect.selectedIndex;
+          const timeSpent = parseFloat(e.target.value) || 0;
+          taskData[dayKey].tasks[taskIndex] = timeSpent;
+          updateTotalTime();
+        });
+
+        taskSelect.addEventListener('change', (e) => {
+          const taskIndex = e.target.selectedIndex;
+          const timeSpent = taskData[dayKey].tasks[taskIndex] || 0;
+          timeInput.value = timeSpent;
+        });
+
+        dayCell.appendChild(taskSelect);
+        dayCell.appendChild(timeInput);
+        calendar.appendChild(dayCell);
+      }
+    }
+
+    function getStartOfWeek(date) {
+      const day = date.getDay(), diff = date.getDate() - day;
+      return new Date(date.setDate(diff));
+    }
+
+    function updateTotalTime() {
+      const selectedTask = document.getElementById('taskSelect').value;
+      let totalTime = 0;
+      for (let day in taskData) {
+        const taskIndex = tasks.indexOf(selectedTask);
+        totalTime += taskData[day].tasks[taskIndex];
+      }
+      document.getElementById('totalTime').textContent = `${totalTime.toFixed(2)} hours`;
+    }
+
+    function showPreviousWeek() {
+      currentWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
+      generateCalendar();
+    }
+
+    function showNextWeek() {
+      currentWeekStartDate.setDate(currentWeekStartDate.getDate() + 7);
+      generateCalendar();
+    }
+
+    generateCalendar();
+    document.getElementById('prevWeek').addEventListener('click', showPreviousWeek);
+    document.getElementById('nextWeek').addEventListener('click', showNextWeek);
+    document.getElementById('taskSelect').addEventListener('change', updateTotalTime);
+  </script>
+</body>
+</html>
